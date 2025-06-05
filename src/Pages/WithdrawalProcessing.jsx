@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 const WithdrawalProcessing = () => {
   const location = useLocation();
   const {
+    clientName,
     withdrawalAmount,
     withdrawalCurrency,
     withdrawalAddress,
@@ -31,7 +32,7 @@ const WithdrawalProcessing = () => {
       <div className="w-92  h-8 mb-[0.5px] bg-[#11301f] justify-center "></div>
 
       <div className="w-88  mb-2 bg-[#11301f]">
-        <h2 className="p-3">Dear Kumar</h2>
+        <h2 className="p-3">Dear {clientName},</h2>
         <h2 className="p-3">
           We have received your request to withdraw{" "}
           <span className="text-[#3e8a5f] font-bold">

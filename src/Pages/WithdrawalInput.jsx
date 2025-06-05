@@ -12,11 +12,13 @@ const WithdrawalInput = () => {
   const [withdrawalCurrency, setWithdrawalCurrency] = useState('');
   const [withdrawalAddress, setWithdrawalAddress] = useState('');
   const [withdrawalTime, setWithdrawalTime] = useState('');
+  const [clientName, setClientName] = useState('');
   const handleGenerate = () => {
    try{
      console.log("Withdrawal details generated");
     navigate('/withdrawal-processing',{
       state:{
+        clientName,
         withdrawalAmount,
         withdrawalCurrency,
         withdrawalAddress,
@@ -30,7 +32,10 @@ const WithdrawalInput = () => {
   return (
     <div className="flex flex-col gap-2 w-full h-[100vh] align-center justify-center p-4 bg-gray-800 text-white">
       <h1 className="text-2xl font-bold mb-4">Withdrawal Input Form</h1>
-     
+
+     <label htmlFor="clientName"> Client Name:</label>
+      <input onChange={(e) => setClientName(e.target.value)} className="input-field" type="text" id="clientName" name="clientName" />
+
       <label htmlFor="withdrawal">Withdrawal Amount:</label>
       <input onChange={(e) => setWithdrawalAmount(e.target.value)} className="input-field" type="number" id="withdrawal" name="withdrawal" />
 
