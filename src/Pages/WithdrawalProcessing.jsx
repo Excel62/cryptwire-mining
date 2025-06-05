@@ -12,7 +12,7 @@ const WithdrawalProcessing = () => {
 
   return (
     <div className="flex flex-col items-center justify-center w-full min-h-screen bg-[#242424] text-white px-4">
-      <h1 className="text-2xl font-bold mb-7 text-center  mt-0 bg-gradient-to-r from-orange-400 via-yellow-500 to-orange-600 bg-clip-text text-transparent">
+      <h1 className="text-2xl font-bold mb-14 text-center  bg-gradient-to-r from-orange-400 via-yellow-500 to-orange-600 bg-clip-text text-transparent">
         Cryptwire Mining
       </h1>
 
