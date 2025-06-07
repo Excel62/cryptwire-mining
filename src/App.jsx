@@ -1,11 +1,11 @@
-import WithdrawalInput from "./Pages/WithdrawalInput";
+import Home from "./Pages/Home";
 
 function App() {
   return (
     <>
-      <WithdrawalInput />
+      <Home />
     </>
-  )
+  );
 }
 
 export default App;
