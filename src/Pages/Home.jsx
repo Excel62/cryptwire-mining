@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom"
-import WithdrawalInput from './WithdrawalInput';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -15,6 +14,9 @@ const Home = () => {
       </button>
       <button onClick={() => handleNavigate("/withdrawal-input")} className="bg-blue-500 text-white px-4 py-2 mt-5 rounded hover:bg-blue-600 transition-colors">
         Go to Withdrawal Input
+      </button>
+      <button onClick={() => handleNavigate("/withdrawal-success-input")} className="bg-blue-500 text-white px-4 py-2 mt-5 rounded hover:bg-blue-600 transition-colors">
+         Withdrawal Success
       </button>
     </div>
   )
