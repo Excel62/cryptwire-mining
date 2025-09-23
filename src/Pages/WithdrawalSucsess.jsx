@@ -1,10 +1,12 @@
 import { useLocation } from "react-router-dom"; // Commented out for demo purposes
 import { CheckCircle, Copy, ArrowLeft } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const WithdrawalProcessing = () => {
   const location = useLocation(); // Commented out for demo
   const [copied, setCopied] = useState(false);
+  const [InrExchangeRates, setInrExchangeRates] = useState(0);
   
   // Demo data - in real app, this would come from location.state
   const clientName = location.state.clientName;
@@ -24,9 +26,29 @@ const WithdrawalProcessing = () => {
   };
 
   const formatCurrency = (amount, currency) => {
-    return `${parseFloat(amount).toFixed(8)} ${currency}`;
+    return `${parseFloat(amount).toFixed(2)} ${currency}`;
   };
-
+  
+const formatCurrencyInr = (amount) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'INR'
+  }).format(amount);
+};
+  useEffect(() => {
+       // make a request to https://api.currencyapi.com/v3/latest?apikey=cur_live_mWaDVjC2HfkSLNJgU5YMKAk33pH81jcv9mCMMATZ to get the latest exchange rates for USD to INR
+    axios.get("https://api.currencyapi.com/v3/latest?apikey=cur_live_mWaDVjC2HfkSLNJgU5YMKAk33pH81jcv9mCMMATZ")
+      .then(response => {
+        console.log(response.data);
+        // get the exchange rate for USD to INR
+       console.log(response.data["data"]["INR"]["value"]);
+        setInrExchangeRates(response.data["data"]["INR"]["value"]);
+        // setExchangeRates(response.data);
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       {/* Header */}
@@ -87,9 +109,18 @@ const WithdrawalProcessing = () => {
             <div className="flex justify-between items-start">
               <span className="text-slate-400 font-medium">Amount</span>
               <div className="text-right">
+              <div>
                 <span className="text-white font-semibold text-lg">
                   {formatCurrency(withdrawalAmount, withdrawalCurrency)}
                 </span>
+              </div>
+                
+              <div>
+                  {/* INR Amount */}
+                <span className="text-green-400 font-semibold text-lg">
+                 ≈ {formatCurrencyInr(withdrawalAmount * InrExchangeRates,)} INR
+                </span>
+              </div>
               </div>
             </div>
 

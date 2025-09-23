@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 // import logo from "../assets/congratslogo.png";
 import { useLocation } from "react-router-dom";
 
+
 const CongratsPage = () => {
   const location = useLocation();
   const { activatedDate, miningCapital, antminerType } = location.state || {};
@@ -24,6 +25,8 @@ const CongratsPage = () => {
       duration: 3 + Math.random() * 2,
     }));
     setConfetti(particles);
+
+
   }, []);
 
   // Custom SVG Icons
