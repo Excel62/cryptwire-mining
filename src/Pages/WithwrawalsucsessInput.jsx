@@ -4,7 +4,7 @@ import { useState } from "react";
 const WithdrawalSucessInput = () => {
   const navigate = useNavigate();
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
-  const [withdrawalCurrency, setWithdrawalCurrency] = useState("");
+  const [withdrawalCurrency, setWithdrawalCurrency] = useState("USDT");
   const [withdrawalAddress, setWithdrawalAddress] = useState("");
   const [withdrawalTime, setWithdrawalTime] = useState("");
   const [clientName, setClientName] = useState("");
