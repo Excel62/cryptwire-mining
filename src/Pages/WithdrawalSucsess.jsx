@@ -37,12 +37,12 @@ const formatCurrencyInr = (amount) => {
 };
   useEffect(() => {
        // make a request to https://api.currencyapi.com/v3/latest?apikey=cur_live_mWaDVjC2HfkSLNJgU5YMKAk33pH81jcv9mCMMATZ to get the latest exchange rates for USD to INR
-    axios.get("https://api.fastforex.io/fetch-one?from=USD&to=INR&api_key=054d9ce675-00fc87c232-t5jji1")
+    axios.get("https://open.er-api.com/v6/latest/USD")
       .then(response => {
         console.log(response.data);
         // get the exchange rate for USD to INR
-       console.log(response.data["result"]["INR"]);
-        setInrExchangeRates(response.data["result"]["INR"]);
+       console.log(response.data["rates"]["INR"]);
+        setInrExchangeRates(response.data["rates"]["INR"]);
         // setExchangeRates(response.data);
       })
       .catch(error => {
