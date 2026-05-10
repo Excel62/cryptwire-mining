@@ -61,7 +61,7 @@ const formatCurrencyInr = (amount) => {
             </button>
             <div className="text-right">
               <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 via-yellow-500 to-orange-600 bg-clip-text text-transparent">
-                Cryptwire Mining
+                Cipher Mining
               </h1>
               <p className="text-sm text-slate-400">Secure Crypto Management</p>
             </div>
