@@ -1,5 +1,5 @@
 /**
- * HashVault — Withdrawal Processing / Success Page
+ * HashVault — Withdrawal SUCCESS Page
  * React + TypeScript + Tailwind CSS
  * Matches the dark MiningDashboard aesthetic.
  *
@@ -7,6 +7,7 @@
  *   navigate('/dashboard/withdrawal-success', {
  *     state: {
  *       clientName:          "Excel Test",
+ *       companyName:         "Cipher Mining",        // ← new
  *       withdrawalAmount:    500,
  *       withdrawalCurrency:  "USDT",
  *       withdrawalAddress:   "TRxx...abc",
@@ -21,7 +22,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   CheckCircle, Copy, Check, ArrowLeft, ExternalLink,
-  Clock, Shield, Hash, Wallet, RefreshCw, Home,
+  Clock, Shield, Hash, Wallet, Home, BadgeCheck,
 } from "lucide-react";
 import axios from "axios";
 
@@ -29,6 +30,7 @@ import axios from "axios";
 
 interface WithdrawalState {
   clientName:          string;
+  companyName?:        string;
   withdrawalAmount:    number;
   withdrawalCurrency:  string;
   withdrawalAddress:   string;
@@ -49,6 +51,9 @@ const fmtCurrency = (amount: number, currency: string) =>
 
 const fmtUsd = (amount: number) =>
   `$${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const fmtInr = (amount: number) =>
+  `₹${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 // ─── Copy hook ────────────────────────────────────────────────────────────────
 
@@ -85,7 +90,7 @@ const DetailRow = ({
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-export default function WithdrawalProcessing() {
+export default function WithdrawalSuccess() {
   const location = useLocation();
   const navigate  = useNavigate();
 
@@ -93,6 +98,7 @@ export default function WithdrawalProcessing() {
 
   // Fallback demo data if navigated directly
   const clientName         = state.clientName         ?? "HashVault User";
+  const companyName        = state.companyName        ?? "Cipher Mining";
   const withdrawalAmount   = state.withdrawalAmount   ?? 0;
   const withdrawalCurrency = state.withdrawalCurrency ?? "USDT";
   const withdrawalAddress  = state.withdrawalAddress  ?? "—";
@@ -100,11 +106,13 @@ export default function WithdrawalProcessing() {
   const txHash             = state.txHash;
 
   const [usdRate,     setUsdRate]     = useState<number | null>(null);
+  const [inrRate,     setInrRate]     = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(true);
+
   const addrCopy = useCopy();
   const hashCopy = useCopy();
 
-  // Fetch live USD rate for the coin
+  // Fetch live USD + INR rates for the coin via CoinGecko
   useEffect(() => {
     const coinId: Record<string, string> = {
       usdt: "tether", bitcoin: "bitcoin", btc: "bitcoin",
@@ -114,15 +122,31 @@ export default function WithdrawalProcessing() {
     };
     const id = coinId[withdrawalCurrency.toLowerCase()];
 
-    if (!id) { setUsdRate(1); setRateLoading(false); return; }
+    if (!id) {
+      setUsdRate(1);
+      setInrRate(83); // fallback approx INR/USD
+      setRateLoading(false);
+      return;
+    }
 
-    axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`, { timeout: 6000 })
-      .then(res => setUsdRate(res.data[id]?.usd ?? 1))
-      .catch(() => setUsdRate(null))
+    axios
+      .get(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd,inr`,
+        { timeout: 6000 }
+      )
+      .then(res => {
+        setUsdRate(res.data[id]?.usd ?? null);
+        setInrRate(res.data[id]?.inr ?? null);
+      })
+      .catch(() => {
+        setUsdRate(null);
+        setInrRate(null);
+      })
       .finally(() => setRateLoading(false));
   }, [withdrawalCurrency]);
 
   const usdValue = usdRate !== null ? withdrawalAmount * usdRate : null;
+  const inrValue = inrRate !== null ? withdrawalAmount * inrRate : null;
 
   // Explorer URL (best-effort)
   const explorerUrl = txHash
@@ -130,6 +154,14 @@ export default function WithdrawalProcessing() {
       ? `https://blockstream.info/tx/${txHash}`
       : `https://etherscan.io/tx/${txHash}`
     : null;
+
+  // Success steps — all done
+  const steps = [
+    { icon: BadgeCheck,  label: "Withdrawal request submitted",               done: true },
+    { icon: Shield,      label: "Admin reviewed and approved transaction",     done: true },
+    { icon: Hash,        label: "TX hash assigned and blockchain broadcast",   done: true },
+    { icon: CheckCircle, label: "Funds dispatched to your external wallet",    done: true },
+  ];
 
   return (
     <div className="min-h-screen bg-[#0a0d10] text-[#e8ecf0]" style={{ fontFamily: "'Syne', sans-serif" }}>
@@ -143,15 +175,37 @@ export default function WithdrawalProcessing() {
           <ArrowLeft size={15} /> Back to Dashboard
         </button>
 
+        {/* Company name always visible */}
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold"
-            style={{ background: "linear-gradient(135deg,#f7931a,#ff6b00)" }}>⛏</div>
-          <span className="text-sm font-extrabold tracking-tight hidden sm:inline">Cipher Mining</span>
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#f7931a,#ff6b00)" }}
+          >
+            ⛏
+          </div>
+          <span className="text-sm font-extrabold tracking-tight">{companyName}</span>
         </div>
       </header>
 
       {/* ── Body ── */}
       <div className="max-w-lg mx-auto px-4 py-8 sm:py-12 pb-24">
+
+        {/* ── Client + company name — always visible incl. mobile ── */}
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="flex items-center justify-between mb-6 px-1"
+        >
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#6b7a8d]">Account</p>
+            <p className="text-sm font-extrabold text-[#e8ecf0] mt-0.5">{clientName}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#6b7a8d]">Secured</p>
+            <p className="text-sm font-extrabold text-[#f7931a] mt-0.5">{companyName}</p>
+          </div>
+        </motion.div>
 
         {/* ── Success hero ── */}
         <motion.div
@@ -162,27 +216,27 @@ export default function WithdrawalProcessing() {
         >
           {/* Animated check */}
           <div className="relative inline-flex mb-6">
-            {/* Outer glow ring */}
+            {/* Pulsing outer glow */}
             <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, duration: 0.6 }}
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: [1, 1.08, 1], opacity: [0.6, 0.3, 0.6] }}
+              transition={{ delay: 0.3, duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
               className="w-24 h-24 rounded-full absolute inset-0"
-              style={{ background: "radial-gradient(circle,rgba(6,214,160,0.15),transparent 70%)" }}
+              style={{ background: "radial-gradient(circle,rgba(6,214,160,0.25),transparent 70%)" }}
             />
             {/* Icon circle */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 15 }}
+              transition={{ delay: 0.15, type: "spring", stiffness: 220, damping: 14 }}
               className="w-24 h-24 rounded-2xl flex items-center justify-center relative z-10"
               style={{
-                background: "rgba(6,214,160,0.1)",
-                border:     "2px solid rgba(6,214,160,0.3)",
-                boxShadow:  "0 0 40px rgba(6,214,160,0.15)",
+                background: "rgba(6,214,160,0.12)",
+                border:     "2px solid rgba(6,214,160,0.4)",
+                boxShadow:  "0 0 48px rgba(6,214,160,0.2)",
               }}
             >
-              <CheckCircle size={44} className="text-emerald-400" />
+              <CheckCircle size={46} className="text-emerald-400" />
             </motion.div>
           </div>
 
@@ -192,7 +246,7 @@ export default function WithdrawalProcessing() {
             transition={{ delay: 0.3 }}
             className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2"
           >
-            Withdrawal Submitted
+            Withdrawal Successful
           </motion.h1>
 
           <motion.p
@@ -201,23 +255,23 @@ export default function WithdrawalProcessing() {
             transition={{ delay: 0.4 }}
             className="text-sm text-[#6b7a8d] mb-4"
           >
-            Your {withdrawalCurrency.toUpperCase()} withdrawal is pending admin review
+            Your {withdrawalCurrency.toUpperCase()} withdrawal has been completed
           </motion.p>
 
-          {/* Status pill */}
+          {/* Status pill — SUCCESS */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold font-mono"
             style={{
-              background:   "rgba(247,147,26,0.1)",
-              border:       "1px solid rgba(247,147,26,0.25)",
-              color:        "#f7931a",
+              background: "rgba(6,214,160,0.1)",
+              border:     "1px solid rgba(6,214,160,0.3)",
+              color:      "#06d6a0",
             }}
           >
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            Awaiting Admin Approval · ~30 min
+            <CheckCircle size={12} />
+            Transaction Confirmed · Completed
           </motion.div>
         </motion.div>
 
@@ -229,15 +283,19 @@ export default function WithdrawalProcessing() {
           className="bg-[#141920] border border-white/[0.07] rounded-2xl p-5 mb-4"
         >
           <p className="text-[10px] font-bold uppercase tracking-widest text-[#6b7a8d] mb-3">Amount Withdrawn</p>
-          <div className="flex items-end justify-between">
+
+          {/* Crypto amount */}
+          <div className="flex items-end justify-between mb-4">
             <div>
               <p className="text-3xl font-bold font-mono text-[#f7931a] tracking-tight">
-                {Number(withdrawalAmount).toFixed(6)}
+                {fmtUsd(withdrawalAmount)}
               </p>
               <p className="text-sm font-bold text-[#6b7a8d] font-mono mt-0.5">
                 {withdrawalCurrency.toUpperCase()}
               </p>
             </div>
+
+            {/* USD equivalent */}
             <div className="text-right">
               {rateLoading ? (
                 <div className="h-5 w-24 bg-white/5 rounded animate-pulse" />
@@ -252,20 +310,46 @@ export default function WithdrawalProcessing() {
             </div>
           </div>
 
-          {/* Progress bar — pending state */}
-          <div className="mt-4">
+          {/* INR row — highlighted */}
+          <div
+            className="flex items-center justify-between rounded-xl px-4 py-3 mb-4"
+            style={{
+              background: "rgba(247,147,26,0.06)",
+              border:     "1px solid rgba(247,147,26,0.15)",
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🇮🇳</span>
+              <div>
+                <p className="text-[10px] text-[#6b7a8d] font-mono">Indian Rupee equivalent</p>
+                <p className="text-[10px] text-[#6b7a8d] font-mono">via CoinGecko live rate</p>
+              </div>
+            </div>
+            <div className="text-right">
+              {rateLoading ? (
+                <div className="h-5 w-28 bg-white/5 rounded animate-pulse" />
+              ) : inrValue !== null ? (
+                <p className="text-xl font-extrabold font-mono text-[#f7931a]">{fmtInr(inrValue)}</p>
+              ) : (
+                <p className="text-[11px] text-[#6b7a8d]">Rate unavailable</p>
+              )}
+            </div>
+          </div>
+
+          {/* Progress bar — COMPLETE */}
+          <div>
             <div className="flex justify-between text-[10px] font-mono text-[#6b7a8d] mb-1.5">
               <span>Submitted</span>
               <span>Under Review</span>
-              <span>Completed</span>
+              <span className="text-emerald-400 font-bold">Completed ✓</span>
             </div>
             <div className="h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: "40%" }}
-                transition={{ delay: 0.6, duration: 1.2, ease: "easeOut" }}
+                animate={{ width: "100%" }}
+                transition={{ delay: 0.6, duration: 1.4, ease: "easeOut" }}
                 className="h-full rounded-full"
-                style={{ background: "linear-gradient(90deg,#f7931a,#ff9f43)" }}
+                style={{ background: "linear-gradient(90deg,#06d6a0,#00b894)" }}
               />
             </div>
           </div>
@@ -283,17 +367,29 @@ export default function WithdrawalProcessing() {
           </div>
 
           <div className="px-5 pb-1">
-            <DetailRow label="Cardholder"  value={clientName} />
+            {/* Client name — always shown */}
+            <DetailRow label="Cardholder" value={clientName} />
+            {/* Company name — always shown */}
+            <DetailRow label="Company" value={companyName} />
             <DetailRow label="Currency"    value={withdrawalCurrency.toUpperCase()} />
             <DetailRow label="Amount"      value={fmtCurrency(withdrawalAmount, withdrawalCurrency)} accent />
+
+            {/* INR inline */}
+            {!rateLoading && inrValue !== null && (
+              <DetailRow label="Amount (INR)">
+                <span className="text-right text-xs font-bold font-mono text-[#f7931a]">
+                  {fmtInr(inrValue)}
+                </span>
+              </DetailRow>
+            )}
+
             <DetailRow label="Status">
-              <span className="flex items-center gap-1.5 text-[10px] font-bold font-mono bg-amber-400/10 text-amber-400 border border-amber-400/20 px-2 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                Pending Approval
+              <span className="flex items-center gap-1.5 text-[10px] font-bold font-mono bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 px-2 py-0.5 rounded-full">
+                <CheckCircle size={10} />
+                Completed
               </span>
             </DetailRow>
-            <DetailRow label="Submitted"   value={fmtDate(withdrawalTime)} mono />
-            <DetailRow label="Est. Process" value="~30 minutes" />
+            <DetailRow label="Completed"  value={fmtDate(withdrawalTime)} mono />
 
             {/* Withdrawal address */}
             <div className="py-3.5 border-b border-white/[0.04]">
@@ -318,7 +414,7 @@ export default function WithdrawalProcessing() {
               )}
             </div>
 
-            {/* TX hash (if available) */}
+            {/* TX hash */}
             {txHash && (
               <div className="py-3.5">
                 <p className="text-xs text-[#6b7a8d] mb-2">Transaction Hash</p>
@@ -330,62 +426,62 @@ export default function WithdrawalProcessing() {
                       className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all
                         ${hashCopy.copied
                           ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                          : "bg-white/5 border border-white/[0.07] text-[#6b7a8d] hover:text-[#f7931a]"}`}>
+                          : "bg-white/5 border border-white/[0.07] text-[#6b7a8d] hover:text-[#f7931a]"}`}
+                    >
                       {hashCopy.copied ? <Check size={12} /> : <Copy size={12} />}
                     </button>
                     {explorerUrl && (
-                      <a href={explorerUrl} target="_blank" rel="noopener noreferrer"
-                        className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center text-[#6b7a8d] hover:text-[#f7931a] hover:border-[#f7931a]/30 transition-all">
+                      <a
+                        href={explorerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center text-[#6b7a8d] hover:text-[#f7931a] hover:border-[#f7931a]/30 transition-all"
+                      >
                         <ExternalLink size={12} />
                       </a>
                     )}
                   </div>
                 </div>
+                {hashCopy.copied && (
+                  <p className="text-[10px] text-emerald-400 font-mono mt-1.5">Hash copied!</p>
+                )}
               </div>
             )}
           </div>
         </motion.div>
 
-        {/* ── Info notice ── */}
+        {/* ── Info notice — success tone ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55 }}
           className="flex items-start gap-3 p-4 rounded-2xl mb-6"
-          style={{ background: "rgba(247,147,26,0.05)", border: "1px solid rgba(247,147,26,0.15)" }}
+          style={{ background: "rgba(6,214,160,0.05)", border: "1px solid rgba(6,214,160,0.2)" }}
         >
-          <Shield size={14} className="text-[#f7931a] mt-0.5 flex-shrink-0" />
+          <Shield size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
           <p className="text-[11px] text-[#6b7a8d] leading-relaxed">
-            Your withdrawal is under admin review and will be processed within 30 minutes.
-            Funds will be sent to the address above once approved.
-            If you have any issues, contact support.
+            Your withdrawal has been fully processed and funds dispatched to the address above.
+            Please allow a few minutes for the transaction to confirm on-chain.
+            Contact support if you need any assistance.
           </p>
         </motion.div>
 
-        {/* ── What happens next ── */}
+        {/* ── What happened ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
           className="bg-[#141920] border border-white/[0.07] rounded-2xl p-5 mb-6"
         >
-          <p className="text-[10px] font-bold uppercase tracking-widest text-[#6b7a8d] mb-4">What Happens Next</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#6b7a8d] mb-4">Transaction Summary</p>
           <div className="space-y-3">
-            {[
-              { icon: RefreshCw, label: "Admin reviews your withdrawal request",     done: true  },
-              { icon: Shield,    label: "Transaction verified and funds dispatched",  done: false },
-              { icon: Hash,      label: "TX hash assigned and blockchain broadcast",  done: false },
-              { icon: CheckCircle,label:"Funds arrive in your external wallet",       done: false },
-            ].map(({ icon: Icon, label, done }, i) => (
+            {steps.map(({ icon: Icon, label, done }, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 border transition-all
-                  ${done
-                    ? "bg-emerald-500/10 border-emerald-500/20"
-                    : "bg-white/5 border-white/[0.06]"}`}>
-                  <Icon size={13} className={done ? "text-emerald-400" : "text-[#6b7a8d]"} />
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 border bg-emerald-500/10 border-emerald-500/20 transition-all">
+                  <Icon size={13} className="text-emerald-400" />
                 </div>
-                <p className={`text-xs ${done ? "text-[#e8ecf0]" : "text-[#6b7a8d]"}`}>{label}</p>
-                {done && <CheckCircle size={11} className="text-emerald-400 ml-auto flex-shrink-0" />}
+                <p className="text-xs text-[#e8ecf0] flex-1">{label}</p>
+                <CheckCircle size={11} className="text-emerald-400 flex-shrink-0" />
               </div>
             ))}
           </div>
@@ -416,7 +512,7 @@ export default function WithdrawalProcessing() {
           </motion.button>
         </motion.div>
 
-        {/* ── Timing note ── */}
+        {/* ── Timestamp ── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -424,7 +520,7 @@ export default function WithdrawalProcessing() {
           className="flex items-center justify-center gap-2 mt-6 text-[11px] text-[#6b7a8d] font-mono"
         >
           <Clock size={11} />
-          Submitted {fmtDate(withdrawalTime)}
+          Completed {fmtDate(withdrawalTime)}
         </motion.div>
       </div>
 
