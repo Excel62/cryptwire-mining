@@ -29,13 +29,13 @@ import axios from "axios";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface WithdrawalState {
-  clientName:          string;
-  companyName?:        string;
-  withdrawalAmount:    number;
-  withdrawalCurrency:  string;
-  withdrawalAddress:   string;
-  withdrawalTime:      string;
-  txHash?:             string;
+  clientName: string;
+  companyName?: string;
+  withdrawalAmount: number;
+  withdrawalCurrency: string;
+  withdrawalAddress: string;
+  withdrawalTime: string;
+  txHash?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -80,8 +80,8 @@ const DetailRow = ({
     <span className="text-xs text-[#6b7a8d] flex-shrink-0">{label}</span>
     {children ?? (
       <span className={`text-right text-xs font-semibold break-all
-        ${mono    ? "font-mono" : ""}
-        ${accent  ? "text-[#f7931a]" : "text-[#e8ecf0]"}`}>
+        ${mono ? "font-mono" : ""}
+        ${accent ? "text-[#f7931a]" : "text-[#e8ecf0]"}`}>
         {value}
       </span>
     )}
@@ -92,21 +92,21 @@ const DetailRow = ({
 
 export default function WithdrawalSuccess() {
   const location = useLocation();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
 
   const state = (location.state ?? {}) as Partial<WithdrawalState>;
 
   // Fallback demo data if navigated directly
-  const clientName         = state.clientName         ?? "HashVault User";
-  const companyName        = state.companyName        ?? "Cipher Mining";
-  const withdrawalAmount   = state.withdrawalAmount   ?? 0;
+  const clientName = state.clientName ?? "HashVault User";
+  const companyName = state.companyName ?? "Cipher Mining";
+  const withdrawalAmount = state.withdrawalAmount ?? 0;
   const withdrawalCurrency = state.withdrawalCurrency ?? "USDT";
-  const withdrawalAddress  = state.withdrawalAddress  ?? "—";
-  const withdrawalTime     = state.withdrawalTime     ?? new Date().toISOString();
-  const txHash             = state.txHash;
+  const withdrawalAddress = state.withdrawalAddress ?? "—";
+  const withdrawalTime = state.withdrawalTime ?? new Date().toISOString();
+  const txHash = state.txHash;
 
-  const [usdRate,     setUsdRate]     = useState<number | null>(null);
-  const [inrRate,     setInrRate]     = useState<number | null>(null);
+  const [usdRate, setUsdRate] = useState<number | null>(null);
+  const [inrRate, setInrRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(true);
 
   const addrCopy = useCopy();
@@ -157,34 +157,31 @@ export default function WithdrawalSuccess() {
 
   // Success steps — all done
   const steps = [
-    { icon: BadgeCheck,  label: "Withdrawal request submitted",               done: true },
-    { icon: Shield,      label: "Admin reviewed and approved transaction",     done: true },
-    { icon: Hash,        label: "TX hash assigned and blockchain broadcast",   done: true },
-    { icon: CheckCircle, label: "Funds dispatched to your external wallet",    done: true },
+    { icon: BadgeCheck, label: "Withdrawal request submitted", done: true },
+    { icon: Shield, label: "Admin reviewed and approved transaction", done: true },
+    { icon: Hash, label: "TX hash assigned and blockchain broadcast", done: true },
+    { icon: CheckCircle, label: "Funds dispatched to your external wallet", done: true },
   ];
 
   return (
     <div className="min-h-screen bg-[#0a0d10] text-[#e8ecf0]" style={{ fontFamily: "'Syne', sans-serif" }}>
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-40 flex items-center justify-between px-4 sm:px-6 h-14 bg-[#0f1318] border-b border-white/[0.07]">
+      <header className="sticky top-0 z-40 flex items-center justify-between px-4 sm:px-6 h-16 bg-[#0f1318] border-b border-white/[0.07]">
         <button
           onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-2 text-[#6b7a8d] hover:text-white transition-colors text-sm font-semibold"
+          className="flex items-center gap-2 text-[#6b7a8d] hover:text-white transition-colors text-sm font-semibold flex-shrink-0"
         >
-          <ArrowLeft size={15} /> Back to Dashboard
+          <ArrowLeft size={15} />
+          <span className="hidden sm:inline">Back to Dashboard</span>
+          <span className="sm:hidden">Back</span>
         </button>
 
-        {/* Company name always visible */}
-        <div className="flex items-center gap-2">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#f7931a,#ff6b00)" }}
-          >
-            ⛏
-          </div>
-          <span className="text-sm font-extrabold tracking-tight">{companyName}</span>
-        </div>
+        <img
+          src="/logo.png"
+          alt="Cipher Mining"
+          className="h-9 sm:h-11 w-auto max-w-[60%] object-contain"
+        />
       </header>
 
       {/* ── Body ── */}
@@ -232,8 +229,8 @@ export default function WithdrawalSuccess() {
               className="w-24 h-24 rounded-2xl flex items-center justify-center relative z-10"
               style={{
                 background: "rgba(6,214,160,0.12)",
-                border:     "2px solid rgba(6,214,160,0.4)",
-                boxShadow:  "0 0 48px rgba(6,214,160,0.2)",
+                border: "2px solid rgba(6,214,160,0.4)",
+                boxShadow: "0 0 48px rgba(6,214,160,0.2)",
               }}
             >
               <CheckCircle size={46} className="text-emerald-400" />
@@ -266,8 +263,8 @@ export default function WithdrawalSuccess() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold font-mono"
             style={{
               background: "rgba(6,214,160,0.1)",
-              border:     "1px solid rgba(6,214,160,0.3)",
-              color:      "#06d6a0",
+              border: "1px solid rgba(6,214,160,0.3)",
+              color: "#06d6a0",
             }}
           >
             <CheckCircle size={12} />
@@ -315,7 +312,7 @@ export default function WithdrawalSuccess() {
             className="flex items-center justify-between rounded-xl px-4 py-3 mb-4"
             style={{
               background: "rgba(247,147,26,0.06)",
-              border:     "1px solid rgba(247,147,26,0.15)",
+              border: "1px solid rgba(247,147,26,0.15)",
             }}
           >
             <div className="flex items-center gap-2">
@@ -368,11 +365,12 @@ export default function WithdrawalSuccess() {
 
           <div className="px-5 pb-1">
             {/* Client name — always shown */}
-            <DetailRow label="Cardholder" value={clientName} />
+            {/* <DetailRow label="User" value={clientName} /> */}
             {/* Company name — always shown */}
             <DetailRow label="Company" value={companyName} />
-            <DetailRow label="Currency"    value={withdrawalCurrency.toUpperCase()} />
-            <DetailRow label="Amount"      value={fmtCurrency(withdrawalAmount, withdrawalCurrency)} accent />
+            <DetailRow label="Completed" value={fmtDate(withdrawalTime)} mono />
+            <DetailRow label="Currency" value={withdrawalCurrency.toUpperCase()} />
+            <DetailRow label="Profit" value={fmtCurrency(withdrawalAmount, withdrawalCurrency)} accent />
 
             {/* INR inline */}
             {!rateLoading && inrValue !== null && (
@@ -389,7 +387,7 @@ export default function WithdrawalSuccess() {
                 Completed
               </span>
             </DetailRow>
-            <DetailRow label="Completed"  value={fmtDate(withdrawalTime)} mono />
+            {/* <DetailRow label="Completed" value={fmtDate(withdrawalTime)} mono /> */}
 
             {/* Withdrawal address */}
             <div className="py-3.5 border-b border-white/[0.04]">
